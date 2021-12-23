@@ -58,9 +58,7 @@ class IGDBHelper:
             pass
         elif r.status_code != 200:
             self.log.error(
-                "Failed to get access token: {} (status code {})".format(
-                    r.text, r.status_code
-                )
+                f"Failed to get access token: {r.text} (status code {r.status_code})"
             )
         elif "access_token" not in r.json():
             self.log.error(

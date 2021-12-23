@@ -37,19 +37,15 @@ class gogDB:
                     self.config["user_ids_to_exclude"].append(user)
                 elif (
                     "db" in self.config["users"][user]
-                    and "{}/{}".format(
-                        self.config["db_path"], self.config["users"][user]["db"]
-                    )
+                    and f'{self.config["db_path"]}/{self.config["users"][user]["db"]}'
                     in self.config["db_list"]
                 ):
                     self.config["db_list"].remove(
-                        "{}/{}".format(
-                            self.config["db_path"], self.config["users"][user]["db"]
-                        )
+                        f'{self.config["db_path"]}/{self.config["users"][user]["db"]}'
                     )
 
         self.log = logging.getLogger(__name__)
-        self.log.debug("db_list = {}".format(self.config["db_list"]))
+        self.log.debug(f'db_list = {self.config["db_list"]}')
 
     def use_db(self, db):
         if not os.path.exists(db):
@@ -71,7 +67,7 @@ class gogDB:
 
         if user_query.rowcount > 1:
             self.log.warning(
-                "Found multiple users in the DB; using the first one ({})".format(user)
+                f"Found multiple users in the DB; using the first one ({user})"
             )
 
         return user
@@ -79,7 +75,7 @@ class gogDB:
     def get_gamepiecetype_id(self, name):
         """Returns the numeric ID for the specified type"""
         return self.cursor.execute(
-            'SELECT id FROM GamePieceTypes WHERE type="{}"'.format(name)
+            f'SELECT id FROM GamePieceTypes WHERE type="{name}"'
         ).fetchone()[0]
 
     # Taken from https://github.com/AB1908/GOG-Galaxy-Export-Script/blob/master/galaxy_library_export.py
@@ -116,7 +112,7 @@ class gogDB:
         )
 
         for query in [owned_game_database, og_query, unique_game_data]:
-            self.log.debug("Running query: {}".format(query))
+            self.log.debug(f"Running query: {query}")
             self.cursor.execute(query)
 
         return self.cursor.fetchall()
@@ -131,7 +127,7 @@ class gogDB:
           - release_key
         """
         query = f'SELECT * FROM GamePieces WHERE releaseKey="{release_key}" and gamePieceTypeId = {gamepiecetype_id}'
-        self.log.debug("Running query: {}".format(query))
+        self.log.debug(f"Running query: {query}")
         self.cursor.execute(query)
 
         result = json.loads(self.cursor.fetchall()[0][-1])
@@ -186,14 +182,14 @@ class gogDB:
 
         # Loop through all the DBs and get info on all owned titles
         for db_file in self.config["db_list"]:
-            self.log.debug("Using DB {}".format(db_file))
+            self.log.debug(f"Using DB {db_file}")
             self.use_db(db_file)
             userid = self.get_user()[0]
             self.owners_to_match.append(userid)
             self.gamepiecetype_id = self.get_gamepiecetype_id("allGameReleases")
             owned_games = self.get_owned_games()
             installed_games = self.get_installed_games()
-            self.log.debug("owned games = {}".format(owned_games))
+            self.log.debug(f"owned games = {owned_games}")
             # A row looks like (release_keys {"title": "Title Name"})
             for release_keys, title_json in owned_games:
                 # If a game is owned on multiple platforms, the release keys will be comma-separated
@@ -247,14 +243,12 @@ class gogDB:
                         # Add metadata from the config file if we have any
                         if slug in self.config["metadata"]:
                             for k in self.config["metadata"][slug]:
-                                self.log.debug(
-                                    "Adding metadata {} to title {}".format(k, title)
-                                )
+                                self.log.debug(f"Adding metadata {k} to title {title}")
                                 game_list[release_key][k] = self.config["metadata"][
                                     slug
                                 ][k]
 
-                    self.log.debug("User {} owns {}".format(userid, release_key))
+                    self.log.debug(f"User {userid} owns {release_key}")
                     game_list[release_key]["owners"].append(userid)
                     game_list[release_key]["platforms"] = [platform]
                     if release_key in installed_games:
@@ -273,7 +267,7 @@ class gogDB:
             ordered_game_list[k]["owners"].sort()
 
         self.owners_to_match.sort()
-        self.log.debug("owners_to_match: {}".format(self.owners_to_match))
+        self.log.debug(f"owners_to_match: {self.owners_to_match}")
 
         return ordered_game_list
 
@@ -426,7 +420,7 @@ class gogDB:
                 ", ".join(self.config["exclude_platforms"]).title()
             )
 
-        self.log.debug("platforms_excluded = {}".format(platforms_excluded))
+        self.log.debug(f"platforms_excluded = {platforms_excluded}")
 
         installed = ""
         if self.config["installed_only"] and not self.config["all_games"]:
